@@ -1,44 +1,28 @@
 package jtechlog.springdata;
 
-import javax.persistence.*;
-import java.io.Serializable;
-import java.util.List;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-public class Employee implements Serializable {
+@Getter
+@Setter
+@Table(name = "employees")
+@NoArgsConstructor
+@ToString
+public class Employee {
     
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(name="EMP_NAME")
+    @Column(name="emp_name")
     private String name;
-
-    public Employee() {
-    }
 
     public Employee(String name) {
         this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String toString() {
-        return String.format("Employee(name = %s)", name);
     }
 
 }

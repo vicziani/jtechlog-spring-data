@@ -1,96 +1,110 @@
 package jtechlog.springdata;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static jtechlog.springdata.HasNameMatcher.hasName;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:/applicationContext.xml")
-public class EmployeeRepositoryTest {
+@SpringBootTest
+class EmployeeRepositoryTest {
 
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Autowired
-    private EmployeeRepository employeeRepository;
+    EmployeeRepository employeeRepository;
 
-    @Before
-    public void init() {
-           employeeRepository.deleteAll();
+    @BeforeEach
+    void init() {
+        employeeRepository.deleteAll();
     }
 
     @Test
-    public void test_findAll_shouldReturnAll() {
+    void findAll_shouldReturnAll() {
         employeeRepository.save(new Employee("John Doe"));
 
-        assertThat(employeeRepository.findAll(), contains(hasName(equalTo("John Doe"))));
+        assertThat(employeeRepository.findAll())
+                .extracting(Employee::getName)
+                .containsExactly("John Doe");
     }
 
     @Test
-    public void test_findByNameStartingWith_shouldReturnMatching() {
+    void findByNameStartingWith_shouldReturnMatching() {
         employeeRepository.save(new Employee("Jane Doe"));
         employeeRepository.save(new Employee("John Doe"));
 
-        assertThat(employeeRepository.findByNameStartingWith("J"), containsInAnyOrder(hasName(equalTo("Jane Doe")), hasName(equalTo("John Doe"))));
-        assertThat(employeeRepository.findByNameStartingWith("Jane"), contains(hasName(equalTo("Jane Doe"))));
+
+        assertThat(employeeRepository.findByNameStartingWith("J"))
+                .extracting(Employee::getName)
+                .containsExactlyInAnyOrder("Jane Doe", "John Doe");
+
+
+        assertThat(employeeRepository.findByNameStartingWith("Jane"))
+                .extracting(Employee::getName)
+                .containsExactly("Jane Doe");
     }
 
     @Test
-    public void test_findByNameLength_shouldReturnMatching() {
+    void findByNameLength_shouldReturnMatching() {
         employeeRepository.save(new Employee("J"));
         employeeRepository.save(new Employee("Ja"));
         employeeRepository.save(new Employee("Jan"));
         employeeRepository.save(new Employee("Jane"));
 
-        assertThat(employeeRepository.findByNameLength(3), contains(hasName(equalTo("Jan"))));
+        assertThat(employeeRepository.findByNameLength(3))
+                .extracting(Employee::getName)
+                .containsExactly("Jan");
     }
 
     @Test
-    public void test_findByNameStartingWithAsList_shouldReturnMatching() {
+    void findByNameStartingWithAsList_shouldReturnMatching() {
         employeeRepository.save(new Employee("Jane Doe"));
         employeeRepository.save(new Employee("John Doe"));
 
-        assertThat(employeeRepository.findByNameStartingWithAsList("J"), containsInAnyOrder(hasName(equalTo("Jane Doe")), hasName(equalTo("John Doe"))));
-        assertThat(employeeRepository.findByNameStartingWithAsList("Jane"), contains(hasName(equalTo("Jane Doe"))));
+
+        assertThat(employeeRepository.findByNameStartingWithAsList("J"))
+                .extracting(Employee::getName)
+                .containsExactlyInAnyOrder("Jane Doe", "John Doe");
+
+        assertThat(employeeRepository.findByNameStartingWithAsList("Jane"))
+                .extracting(Employee::getName)
+                .containsExactly("Jane Doe");
     }
 
     @Test
-    public void test_findByNameStartingWithOrderByNameAsc_shouldReturnInRightOrder() {
+    void findByNameStartingWithOrderByNameAsc_shouldReturnInRightOrder() {
         employeeRepository.save(new Employee("John Doe"));
         employeeRepository.save(new Employee("Jane Doe"));
 
-        assertThat(employeeRepository.findByNameStartingWithOrderByNameAsc("J"), contains(hasName(equalTo("Jane Doe")), hasName(equalTo("John Doe"))));
+        assertThat(employeeRepository.findByNameStartingWithOrderByNameAsc("J"))
+                .extracting(Employee::getName)
+                .containsExactly("Jane Doe", "John Doe");
     }
 
     @Test
-    public void test_findByNameStartingWith_shouldReturnInRightOrder() {
+    void findByNameStartingWith_shouldReturnInRightOrder() {
         employeeRepository.save(new Employee("John Doe"));
         employeeRepository.save(new Employee("Jane Doe"));
 
-        assertThat(employeeRepository.findByNameStartingWith("J", new Sort(new Sort.Order(Sort.Direction.ASC, "name"))),
-                contains(hasName(equalTo("Jane Doe")), hasName(equalTo("John Doe"))));
+        assertThat(employeeRepository.findByNameStartingWith("J", Sort.by(new Sort.Order(Sort.Direction.ASC, "name"))))
+                .extracting(Employee::getName)
+                .containsExactly("Jane Doe", "John Doe");
     }
 
     @Test
-    public void test_findByNameStartingWith_shouldReturnOnlyPage() {
+    void findByNameStartingWith_shouldReturnOnlyPage() {
         for (int i = 10; i < 30; i++) {
             employeeRepository.save(new Employee("John Doe " + i));
         }
 
-        Page page = employeeRepository.findByNameStartingWith("J", new PageRequest(3, 3, new Sort(new Sort.Order(Sort.Direction.ASC, "name"))));
-        assertThat((List<Employee>)page.getContent(),
-                contains(hasName(equalTo("John Doe 19")), hasName(equalTo("John Doe 20")), hasName(equalTo("John Doe 21"))));
+        Page<Employee> page = employeeRepository.findByNameStartingWith("J",
+                PageRequest.of(3, 3,
+                        Sort.by(new Sort.Order(Sort.Direction.ASC, "name"))));
+        assertThat(page.getContent())
+                .extracting(Employee::getName)
+                .containsExactly("John Doe 19", "John Doe 20", "John Doe 21");
     }
 }

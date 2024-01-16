@@ -2,7 +2,7 @@ package jtechlog.springdata;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 
 public class EmployeeRepositoryImpl implements EmployeeRepositoryCustom {
